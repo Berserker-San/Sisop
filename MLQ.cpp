@@ -18,14 +18,15 @@ typedef struct {
 
 // Round Robin
 int round_robin(Proceso Procesos[], int n, int quantum, int tiempo_actual, char orden_ejecucion[]) {
-    bool completado[Procesos_Maximos] = {false};  // Un arreglo que indicara si el proceso ha sido completado o no
+    bool completado[Procesos_Maximos] = {false};  // Arreglo que indicara si el proceso ha sido completado
     int procesos_completados = 0;  
 
     while (procesos_completados < n) {
         for (int i = 0; i < n; i++) {
             if (!completado[i] && Procesos[i].AT <= tiempo_actual) {
+				printf("Ejecutando proceso: %c, Tiempo entrada: %d\n", Procesos[i].id, tiempo_actual);
 
-                strncat(orden_ejecucion, &Procesos[i].id, 1); // Orden de ejecución
+                strncat(orden_ejecucion, &Procesos[i].id, 1);
 
                 if (Procesos[i].tiempo_restante > quantum) {
                     tiempo_actual += quantum;
@@ -39,6 +40,9 @@ int round_robin(Proceso Procesos[], int n, int quantum, int tiempo_actual, char 
                     completado[i] = true;
                     procesos_completados++;
                 }
+                
+        	printf("Terminando Proceso %c, tiempo salida %d\n", Procesos[i].id, tiempo_actual);
+
             }
         }
     }
@@ -50,8 +54,10 @@ void mlq_simulation(Proceso Procesos[], int cantidad_procesos) {
     Proceso queue_1[Procesos_Maximos], queue_2[Procesos_Maximos], queue_3[Procesos_Maximos];
     int q1_tamano = 0, q2_tamano = 0, q3_tamano = 0;
     int tiempo_actual = 0;
+    int prom_tiempo_completado = 0;
+    int prom_tiempo_espera = 0;
+    int prom_tiempo_total = 0;
 
-    // Cadena para guardar el orden de ejecución de los procesos
     char orden_ejecucion[100] = "";
 
     // Separar los procesos en las tres colas
@@ -83,60 +89,39 @@ void mlq_simulation(Proceso Procesos[], int cantidad_procesos) {
     // Resultados por cola
     printf("\nResultados:\n");
     for (int i = 0; i < q1_tamano; i++) {
-        printf("Proceso %c: Tiempo Completado = %d, Tiempo Espera = %d, Tiempo Total = %d\n",
-               queue_1[i].id, queue_1[i].tiempo_completado, queue_1[i].tiempo_espera, queue_1[i].tiempo_total);
+        printf("Proceso %c: Tiempo Completado = %d, Tiempo Espera = %d, Tiempo Total = %d\n", queue_1[i].id, queue_1[i].tiempo_completado, queue_1[i].tiempo_espera, queue_1[i].tiempo_total);
+    	prom_tiempo_completado += queue_1[i].tiempo_completado;
+    	prom_tiempo_espera += queue_1[i].tiempo_espera;
+    	prom_tiempo_total += queue_1[i].tiempo_total;
     }
+    
     for (int i = 0; i < q2_tamano; i++) {
-        printf("Proceso %c: Tiempo Completado = %d, Tiempo Espera = %d, Tiempo Total = %d\n",
-               queue_2[i].id, queue_2[i].tiempo_completado, queue_2[i].tiempo_espera, queue_2[i].tiempo_total);
-    }
+        printf("Proceso %c: Tiempo Completado = %d, Tiempo Espera = %d, Tiempo Total = %d\n", queue_2[i].id, queue_2[i].tiempo_completado, queue_2[i].tiempo_espera, queue_2[i].tiempo_total);
+    	prom_tiempo_completado += queue_2[i].tiempo_completado;
+    	prom_tiempo_espera += queue_2[i].tiempo_espera;
+    	prom_tiempo_total += queue_2[i].tiempo_total;
+	}
+    
     for (int i = 0; i < q3_tamano; i++) {
-        printf("Proceso %c: Tiempo Completado = %d, Tiempo Espera = %d, Tiempo Total = %d\n",
-               queue_3[i].id, queue_3[i].tiempo_completado, queue_3[i].tiempo_espera, queue_3[i].tiempo_total);
-    }
+        printf("Proceso %c: Tiempo Completado = %d, Tiempo Espera = %d, Tiempo Total = %d\n", queue_3[i].id, queue_3[i].tiempo_completado, queue_3[i].tiempo_espera, queue_3[i].tiempo_total);
+    	prom_tiempo_completado += queue_3[i].tiempo_completado;
+    	prom_tiempo_espera += queue_3[i].tiempo_espera;
+    	prom_tiempo_total += queue_3[i].tiempo_total;
+	}
+	
+	printf("Promedios: Prom T. Completado = %d, Prom T. Espera = %d, Pron T. Total = %d\n", prom_tiempo_completado/cantidad_procesos, prom_tiempo_espera/cantidad_procesos, prom_tiempo_total/cantidad_procesos);
 
     // Orden de ejecución
-    printf("\nOrden de ejecución: %s\n", orden_ejecucion);
-}
-
-void lectura(const char* nombre_archivo, char IDS[], int BTS[], int ATS[], int Colas[], int* cantidad_procesos) {
-    FILE *archivo = fopen(nombre_archivo, "r");
-    if (archivo == NULL) {
-        printf("Error al abrir el archivo\n");
-        return;
-    }
-    // Leer IDS
-    for (int i = 0; i < Procesos_Maximos; i++) {
-        fscanf(archivo, " %c", &IDS[i]);
-    }
-    // Leer Burst Times
-    for (int i = 0; i < Procesos_Maximos; i++) {
-        fscanf(archivo, "%d", &BTS[i]);
-    }
-    // Leer Arrival Times
-    for (int i = 0; i < Procesos_Maximos; i++) {
-        fscanf(archivo, "%d", &ATS[i]);
-    }
-    // Leer colas
-    for (int i = 0; i < Procesos_Maximos; i++) {
-        fscanf(archivo, "%d", &Colas[i]);
-    }
-    // Leer cantidad de procesos
-    fscanf(archivo, "%d", cantidad_procesos);
-    fclose(archivo);
+    printf("\nOrden de ejecucion: %s\n", orden_ejecucion);
 }
 
 int main() {
     // Datos de entrada
-    char IDS[Procesos_Maximos];
-    int BTS[Procesos_Maximos], ATS[Procesos_Maximos], Colas[Procesos_Maximos];
-    int cantidad_procesos;
-
-    // Lectura de datos
-    lectura("ejemploMLQ.txt", IDS, BTS, ATS, Colas, &cantidad_procesos);
-
-	printf("\nCantidad de procesos: %d\n", cantidad_procesos);
-	printf("\nID1: %s\n", IDS[0]);
+    char IDS[] = {'A', 'B', 'C', 'D'};
+    int BTS[] = {4, 3, 8, 1};
+    int ATS[] = {0, 0, 0, 10};
+    int Colas[] = {1, 1, 2, 3};
+    int cantidad_procesos = 4;
 	
     // Procesos
     Proceso Procesos[Procesos_Maximos];
@@ -145,10 +130,9 @@ int main() {
         Procesos[i].BT = BTS[i];
         Procesos[i].AT = ATS[i];
         Procesos[i].cola = Colas[i];
-        Procesos[i].tiempo_restante = BTS[i];  // El tiempo restante es el tiempo que necesita el proceso (al inicio)
+        Procesos[i].tiempo_restante = BTS[i];
     }
 
-    // Simulación MLQ
     mlq_simulation(Procesos, cantidad_procesos);
 
     return 0;
