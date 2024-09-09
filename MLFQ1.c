@@ -5,7 +5,7 @@
 #define Procesos_Maximos 10
 #define NIVELES 3
 
-// Estructura que usaremos para representar los procesos
+// Estructura para representar los procesos
 typedef struct {
     char id;
     int BT;
@@ -55,34 +55,34 @@ int round_robin_mlfq(Proceso Procesos[], int n, int quantum, int *tiempo_actual,
 			}
         }
 
-        // Verificar si han llegado nuevos procesos para la cola actual antes de cambiar de nivel
+        // Verificar si han llegado nuevos procesos a la cola actual o anterior
         for (int i = 0; i < n; i++) {
             if (!completado[i] && Procesos[i].AT <= *tiempo_actual && Procesos[i].nivel <= nivel_actual && Procesos[i].tiempo_restante > 0) {
-                procesos_en_cola = true;  // Si encontramos un proceso nuevo, volvemos a atender la cola actual
+                procesos_en_cola = true;
                 nivel_actual = Procesos[i].nivel;
             }
         }
 
-    } while (procesos_en_cola);  // Continuar hasta que no haya más procesos en la cola actual
+    } while (procesos_en_cola);
 
     return *tiempo_actual;
 }
 
-// Simulación de MLFQ
+// MLFQ con tres colas Round Robin
 void mlfq_simulation(Proceso Procesos[], int cantidad_procesos) {
-    int quantum[] = {2, 4, 6};  // Los quanta para cada nivel
+    int quantum[] = {2, 4, 6};
     int tiempo_actual = 0;
     char orden_ejecucion[100] = "";
     int prom_tiempo_completado = 0;
     int prom_tiempo_espera = 0;
     int prom_tiempo_total = 0;
 
-    // Ejecutar colas en niveles ascendentes hasta que todos los procesos se completen
+    // Ejecución de colas 
     for (int nivel = 0; nivel < NIVELES; nivel++) {
         tiempo_actual = round_robin_mlfq(Procesos, cantidad_procesos, quantum[nivel], &tiempo_actual, orden_ejecucion, nivel);
     }
 
-    // Mostrar resultados finales
+    // Resultados
     printf("\nResultados:\n");
     for (int i = 0; i < cantidad_procesos; i++) {
         printf("Proceso %c: Tiempo Completado = %d, Tiempo Espera = %d, Tiempo Total = %d\n",
@@ -101,6 +101,28 @@ void mlfq_simulation(Proceso Procesos[], int cantidad_procesos) {
 }
 
 int main() {
+	
+	FILE *file = fopen("ejemploMLFQ.txt", "r");
+    if (!file) {
+        printf("No se pudo abrir el archivo de entrada.\n");
+        return 1;
+    }
+
+    Proceso Procesos[Procesos_Maximos];
+    int cantidad_procesos = 0;
+
+    // Lectura
+    while (fscanf(file, " %c %d %d", &Procesos[cantidad_procesos].id, 
+                  &Procesos[cantidad_procesos].BT, 
+                  &Procesos[cantidad_procesos].AT) == 3) {
+        Procesos[cantidad_procesos].tiempo_restante = Procesos[cantidad_procesos].BT;
+        Procesos[cantidad_procesos].nivel = 0;
+        cantidad_procesos++;
+    }
+
+    fclose(file);
+	
+	/*
     // Datos de entrada
     char IDS[] = {'A', 'B', 'C', 'D'};
     int BTS[] = {4, 3, 8, 1};
@@ -116,6 +138,8 @@ int main() {
         Procesos[i].tiempo_restante = BTS[i];
 		Procesos[i].nivel = 0;     // Todos los procesos comienzan en el nivel 0
     }
+    
+    */
 
     // Simulación MLFQ
     mlfq_simulation(Procesos, cantidad_procesos);

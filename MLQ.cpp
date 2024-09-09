@@ -4,7 +4,7 @@
 
 #define Procesos_Maximos 10
 
-// Estructura que usaremos para representar los procesos
+// Estructura para representar los procesos
 typedef struct {
     char id;
     int BT;
@@ -116,6 +116,27 @@ void mlq_simulation(Proceso Procesos[], int cantidad_procesos) {
 }
 
 int main() {
+	
+	FILE *file = fopen("ejemploMLQ.txt", "r");
+    if (!file) {
+        printf("No se pudo abrir el archivo de entrada.\n");
+        return 1;
+    }
+
+    Proceso Procesos[Procesos_Maximos];
+    int cantidad_procesos = 0;
+
+    // Lectura
+    while (fscanf(file, " %c %d %d %d", &Procesos[cantidad_procesos].id, 
+                  &Procesos[cantidad_procesos].BT, 
+                  &Procesos[cantidad_procesos].AT, &Procesos[cantidad_procesos].cola)== 4) {
+        Procesos[cantidad_procesos].tiempo_restante = Procesos[cantidad_procesos].BT;
+        cantidad_procesos++;
+    }
+
+    fclose(file);
+	
+	/*
     // Datos de entrada
     char IDS[] = {'A', 'B', 'C', 'D'};
     int BTS[] = {4, 3, 8, 1};
@@ -132,7 +153,9 @@ int main() {
         Procesos[i].cola = Colas[i];
         Procesos[i].tiempo_restante = BTS[i];
     }
-
+	*/
+	
+	// Simulación MLQ
     mlq_simulation(Procesos, cantidad_procesos);
 
     return 0;
